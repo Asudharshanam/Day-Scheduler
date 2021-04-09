@@ -1,18 +1,34 @@
 import React, { useReducer, createContext, useContext } from 'react';
+import { Moment } from 'moment';
 
 export interface ListStructure {
 	id: number;
 	completed: boolean;
 	title: string;
 	description: string;
+	date: Moment;
+	time: string;
 }
 
-const initialState = {
+export interface initialStateType {
+	scheduleList: ListStructure[];
+	deletedScheduleList: ListStructure[];
+}
+
+export const initialState = {
 	scheduleList: [],
 	deletedScheduleList: [],
 };
 
-function reducer(state: typeof initialState, action: any) {
+type Action =
+	| { type: 'add'; payload: ListStructure }
+	| { type: 'edit'; payload: ListStructure }
+	| { type: 'completed'; payload: ListStructure }
+	| { type: 'delete'; payload: ListStructure }
+	| { type: 'undo_delete'; payload: ListStructure }
+	| { type: 'delete_forever'; payload: ListStructure };
+
+function reducer(state: initialStateType, action: Action) {
 	switch (action.type) {
 		case 'add': {
 			return {
@@ -90,7 +106,7 @@ interface ContextType {
 }
 
 export const GroupPageContext = createContext(null);
-export default function GroupPageContextProvider({
+export default function SchedulerStoreContextProvider({
 	children,
 }: {
 	children: React.ReactComponentElement<
@@ -98,7 +114,10 @@ export default function GroupPageContextProvider({
 		Pick<any, string | number | symbol>
 	>;
 }): JSX.Element {
-	const [state, dispatch] = useReducer(reducer, initialState);
+	const [state, dispatch] = useReducer(
+		reducer,
+		initialState as initialStateType
+	);
 
 	return (
 		<GroupPageContext.Provider value={{ state, dispatch } as ContextType}>
@@ -107,13 +126,16 @@ export default function GroupPageContextProvider({
 	);
 }
 
-export function useGroupPageState() {
+export function useSchedulerStoreState() {
 	const context = useContext(GroupPageContext);
 	if (!context) {
 		throw new Error(
-			'useGroupPageState must be used within the AppStateProvider'
+			'useSchedulerStoreState must be used within the AppStateProvider'
 		);
 	}
-	const { state, dispatch } = context;
+	const {
+		state,
+		dispatch,
+	}: { state: initialStateType; dispatch: Action } = context;
 	return { state, dispatch };
 }

@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Button } from 'react-bootstrap';
-import { useGroupPageState, ListStructure } from './SchedulerStore';
-
+import { useSchedulerStoreState, ListStructure } from './SchedulerStore';
+import 'react-dates/initialize';
+import 'react-dates/lib/css/_datepicker.css';
+import { SingleDatePicker } from 'react-dates';
+import moment, { Moment } from 'moment';
+import CalenderIcon from '../../Icons/CalenderIcon';
 interface Props {
 	show: boolean;
 	onHide: () => void;
@@ -11,13 +15,18 @@ interface Props {
 export interface FormValue {
 	title: string;
 	description: string;
+	time: any;
 }
 
 export default function ScheduleForm({ show, onHide, editFields }: Props) {
-	const { dispatch } = useGroupPageState();
+	const { dispatch } = useSchedulerStoreState();
+	const [selectedDate, setSelectedDate] = useState<Moment>(moment());
+	const [clientAddDateFocus, setClientAddDateFocus] = useState<boolean>(false);
+
 	const [formValue, setFormValues] = useState<FormValue>({
 		title: '',
 		description: '',
+		time: moment().format('hh:mm'),
 	});
 
 	useEffect(() => {
@@ -25,7 +34,9 @@ export default function ScheduleForm({ show, onHide, editFields }: Props) {
 			setFormValues({
 				title: editFields.title,
 				description: editFields.description,
+				time: editFields.time,
 			});
+			setSelectedDate(editFields.date);
 		}
 	}, [editFields]);
 
@@ -34,13 +45,19 @@ export default function ScheduleForm({ show, onHide, editFields }: Props) {
 		setFormValues({ ...formValue, [name]: value });
 	};
 
+	const defaultState = () => {
+		setFormValues({
+			title: '',
+			description: '',
+			time: '',
+		});
+		setSelectedDate(moment());
+		onHide();
+	};
+
 	const onAdd = () => {
 		if (!formValue.title) {
-			setFormValues({
-				title: '',
-				description: '',
-			});
-			onHide();
+			defaultState();
 		} else if (editFields?.id) {
 			dispatch({
 				type: 'edit',
@@ -48,7 +65,9 @@ export default function ScheduleForm({ show, onHide, editFields }: Props) {
 					id: editFields.id,
 					title: formValue.title,
 					description: formValue.description,
+					date: selectedDate,
 					completed: editFields.completed,
+					time: formValue.time,
 				},
 			});
 		} else {
@@ -58,15 +77,13 @@ export default function ScheduleForm({ show, onHide, editFields }: Props) {
 					id: Date.now(),
 					title: formValue.title,
 					description: formValue.description,
+					date: selectedDate,
 					completed: false,
+					time: formValue.time,
 				},
 			});
 		}
-		setFormValues({
-			title: '',
-			description: '',
-		});
-		onHide();
+		defaultState();
 	};
 
 	return (
@@ -77,7 +94,7 @@ export default function ScheduleForm({ show, onHide, editFields }: Props) {
 			aria-labelledby='contained-modal-title-vcenter'>
 			<Modal.Header closeButton>
 				<Modal.Title id='contained-modal-title-vcenter'>
-					Modal heading
+					Add Schedule
 				</Modal.Title>
 			</Modal.Header>
 			<Modal.Body>
@@ -92,6 +109,35 @@ export default function ScheduleForm({ show, onHide, editFields }: Props) {
 							value={formValue.title}
 							onChange={handleChange}
 						/>
+						<div className='d-flex mt-3'>
+							<label className='form-label mt-1'>Date</label>
+							<div className='ml-2'>
+								<SingleDatePicker
+									numberOfMonths={1}
+									minDate={moment().subtract(1, 'days')}
+									date={selectedDate}
+									onDateChange={(dateInput) =>
+										setSelectedDate(dateInput || moment())
+									}
+									focused={clientAddDateFocus}
+									onFocusChange={({ focused }) =>
+										setClientAddDateFocus(!!focused)
+									}
+									id='your_unique_id'
+									small
+									customInputIcon={<CalenderIcon />}
+								/>
+							</div>
+							<label className='form-label mt-1 ml-3'>Time</label>
+							<input
+								onChange={handleChange}
+								value={formValue.time}
+								style={{ maxWidth: 150 }}
+								type='time'
+								name='time'
+								className='form-control ml-2'
+							/>
+						</div>
 					</div>
 					<div className='mb-3'>
 						<label className='form-label'>Description</label>

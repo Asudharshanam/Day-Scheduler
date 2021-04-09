@@ -1,16 +1,13 @@
 import { useState } from 'react';
-import { ListStructure, useGroupPageState } from './SchedulerStore';
+import { ListStructure, useSchedulerStoreState } from './SchedulerStore';
 import ScheduleForm from './ScheduleForm';
-import { Card, Tabs, Tab, Button } from 'react-bootstrap';
-import TrashIcon from '../../Icons/TrashIcon';
-import CheckIcon from '../../Icons/CheckIcon';
-import UndoIcon from '../../Icons/UndoIcon';
-import EditIcon from '../../Icons/EditIcon';
+import ScheduleListItem from './ScheduleListItem';
+import { Tabs, Tab } from 'react-bootstrap';
 
 export default function ScheduleList() {
 	const [modalShow, setModalShow] = useState<boolean>(false);
 	const [key, setKey] = useState<string>('active');
-	const { state, dispatch } = useGroupPageState();
+	const { state } = useSchedulerStoreState();
 	const [editFields, setEditFields] = useState<ListStructure>();
 
 	return (
@@ -22,40 +19,14 @@ export default function ScheduleList() {
 				<Tab eventKey='active' title='Active'>
 					{state.scheduleList.map((list) => {
 						return (
-							<Card body className='m-3'>
-								<div className='d-flex justify-content-between'>
-									<div>
-										<h6>{list.title}</h6>
-										<small className='text-muted'>{list.description}</small>
-									</div>
-									<div>
-										<Button
-											className='m-2'
-											variant='link'
-											onClick={() => {
-												setEditFields(list);
-												setModalShow(true);
-											}}>
-											<EditIcon />
-										</Button>
-										<Button
-											className='m-2'
-											variant='link'
-											onClick={() =>
-												dispatch({ type: 'delete', payload: list })
-											}>
-											<TrashIcon />
-										</Button>
-										<Button
-											variant='link'
-											onClick={() =>
-												dispatch({ type: 'completed', payload: list })
-											}>
-											<CheckIcon color={list.completed ? 'green' : ''} />
-										</Button>
-									</div>
-								</div>
-							</Card>
+							<ScheduleListItem
+								list={list}
+								setEditFields={(editedList: ListStructure) =>
+									setEditFields(editedList)
+								}
+								setModalShow={() => setModalShow(true)}
+								tab='active'
+							/>
 						);
 					})}
 					<button
@@ -71,36 +42,13 @@ export default function ScheduleList() {
 					<p>Past</p>
 				</Tab>
 				<Tab eventKey='deleted' title='Deleted'>
-					{state.deletedScheduleList.map((list) => {
-						return (
-							<Card body className='m-3'>
-								<div className='d-flex justify-content-between'>
-									<div>
-										<h6>{list.title}</h6>
-										<small className='text-muted'>{list.description}</small>
-									</div>
-									<div>
-										<Button
-											className='m-2'
-											variant='link'
-											onClick={() =>
-												dispatch({ type: 'undo_delete', payload: list })
-											}>
-											<UndoIcon />
-										</Button>
-										<Button
-											className='m-2'
-											variant='link'
-											onClick={() =>
-												dispatch({ type: 'delete_forever', payload: list })
-											}>
-											<TrashIcon />
-										</Button>
-									</div>
-								</div>
-							</Card>
-						);
-					})}
+					{state.deletedScheduleList.map((list) => (
+						<ScheduleListItem
+							list={list}
+							setModalShow={() => setModalShow(true)}
+							tab='deleted'
+						/>
+					))}
 				</Tab>
 			</Tabs>
 			<ScheduleForm
