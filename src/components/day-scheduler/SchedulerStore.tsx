@@ -20,15 +20,7 @@ export const initialState = {
 	deletedScheduleList: [],
 };
 
-type Action =
-	| { type: 'add'; payload: ListStructure }
-	| { type: 'edit'; payload: ListStructure }
-	| { type: 'completed'; payload: ListStructure }
-	| { type: 'delete'; payload: ListStructure }
-	| { type: 'undo_delete'; payload: ListStructure }
-	| { type: 'delete_forever'; payload: ListStructure };
-
-function reducer(state: initialStateType, action: Action) {
+function reducer(state: initialStateType, action: any) {
 	switch (action.type) {
 		case 'add': {
 			return {
@@ -136,6 +128,6 @@ export function useSchedulerStoreState() {
 	const {
 		state,
 		dispatch,
-	}: { state: initialStateType; dispatch: Action } = context;
+	}: { state: initialStateType; dispatch: any } = context;
 	return { state, dispatch };
 }
